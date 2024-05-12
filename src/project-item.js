@@ -2,11 +2,19 @@ function createProject(title, todos = []) {
   let index = -1;
 
   const addTodoItem = (todoItem) => {
+    todoItem.setIndex(todos.length);
     todos.push(todoItem);
+  };
+
+  const reassignTodoIndices = () => {
+    for (let i = 0; i < todos.length; i++) {
+      todos[i].setIndex(i);
+    }
   };
 
   const removeTodoItem = (index) => {
     todos.splice(index, 1);
+    reassignTodoIndices();
   };
 
   const setIndex = (newIndex) => {
@@ -20,6 +28,8 @@ function createProject(title, todos = []) {
   const getIndex = () => index;
   const getTitle = () => title;
 
+  const getTodoItems = () => todos;
+
   return {
     addTodoItem,
     removeTodoItem,
@@ -27,6 +37,7 @@ function createProject(title, todos = []) {
     getTitle,
     setIndex,
     getIndex,
+    getTodoItems,
   };
 }
 

@@ -1,5 +1,6 @@
 function createApp(projects = []) {
   const addProject = (project) => {
+    project.setIndex(projects.length);
     projects.push(project);
   };
 

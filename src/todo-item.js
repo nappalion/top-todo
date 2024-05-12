@@ -6,6 +6,8 @@ function createToDoItem(
   priority,
   notes
 ) {
+  let index = -1;
+
   const setTitle = (newTitle) => {
     title = newTitle;
   };
@@ -30,12 +32,17 @@ function createToDoItem(
     notes = newNotes;
   };
 
+  const setIndex = (newIndex) => {
+    index = newIndex;
+  };
+
   const getTitle = () => title;
   const getDescription = () => description;
   const getDueDate = () => dueDate;
   const getIsComplete = () => isComplete;
   const getPriority = () => priority;
   const getNotes = () => notes;
+  const getIndex = () => index;
 
   return {
     setTitle,
@@ -50,6 +57,8 @@ function createToDoItem(
     getPriority,
     setNotes,
     getNotes,
+    setIndex,
+    getIndex,
   };
 }
 
