@@ -4,8 +4,102 @@ import createApp from "./app-item";
 
 import "./style.css";
 
+function storageAvailable(type) {
+  let storage;
+  try {
+    storage = window[type];
+    const x = "__storage_test__";
+    storage.setItem(x, x);
+    storage.removeItem(x);
+    return true;
+  } catch (e) {
+    return (
+      e instanceof DOMException &&
+      // everything except Firefox
+      (e.code === 22 ||
+        // Firefox
+        e.code === 1014 ||
+        // test name field too, because code might not be present
+        // everything except Firefox
+        e.name === "QuotaExceededError" ||
+        // Firefox
+        e.name === "NS_ERROR_DOM_QUOTA_REACHED") &&
+      // acknowledge QuotaExceededError only if there's something already stored
+      storage &&
+      storage.length !== 0
+    );
+  }
+}
+
+function writeLocalStorage(projects) {
+  localStorage.clear();
+
+  const projectsForJSON = {};
+  for (const project of projects) {
+    const projectTodosForJSON = project.getTodoItems().map((todo) => ({
+      title: todo.getTitle(),
+      description: todo.getDescription(),
+      dueDate: todo.getDueDate(),
+      isComplete: todo.getIsComplete(),
+      priority: todo.getPriority(),
+      notes: todo.getNotes(),
+    }));
+    projectsForJSON[project.getTitle()] = projectTodosForJSON;
+  }
+
+  localStorage.setItem("projects", JSON.stringify(projectsForJSON));
+}
+
+// projects {
+// 0: title, array of todos
+// 1: title, array of todos...
+// }
+
+function readLocalStorage() {
+  const projectsJSON = localStorage.getItem("projects");
+
+  console.log(projectsJSON);
+  if (projectsJSON) {
+    const projectsData = JSON.parse(projectsJSON);
+    const projects = [];
+
+    // Iterate over each project data in the parsed JSON
+    let index = 0;
+    for (const projectTitle in projectsData) {
+      if (projectsData.hasOwnProperty(projectTitle)) {
+        const projectTodosData = projectsData[projectTitle];
+        const todos = projectTodosData.map((todoData) => {
+          return createToDoItem(
+            todoData.title,
+            todoData.description,
+            todoData.dueDate,
+            todoData.isComplete,
+            todoData.priority,
+            todoData.notes
+          );
+        });
+        const project = createProject(projectTitle, todos);
+        project.setIndex(index);
+        index += 1;
+        projects.push(project);
+      }
+    }
+
+    return projects;
+  } else {
+    // If no projects data found in local storage, return an empty array
+    return [];
+  }
+}
+
+if (storageAvailable("localStorage")) {
+  readLocalStorage();
+} else {
+  console.log("ERROR: no local storage.");
+}
+
 function getUserControls() {
-  const app = createApp([]);
+  const app = createApp(readLocalStorage());
 
   // Project Interaction
   const getProjects = () => app.getProjects();
@@ -82,16 +176,16 @@ function createUI() {
   });
 
   // Create Default Project
-  userControls.addProject("Default", []);
-  userControls.addTodoItem(
-    0,
-    "Test #1",
-    "A test todo-item",
-    "1/1/2022",
-    false,
-    "high",
-    "do l"
-  );
+  // userControls.addProject("Default", []);
+  // userControls.addTodoItem(
+  //   0,
+  //   "Test #1",
+  //   "A test todo-item",
+  //   "1/1/2022",
+  //   false,
+  //   "high",
+  //   "do l"
+  // );
 
   function createProjectForm() {
     let currProjectIndex = -1;
@@ -317,6 +411,7 @@ function createUI() {
       const createTodoItemBtn = document.createElement("button");
       createTodoItemBtn.addEventListener("click", () => {
         todoItemForm.setProjectIndex(project.getIndex());
+        console.log(project.getIndex());
         todoItemForm.toggleModal();
       });
       createTodoItemBtn.textContent = "Create To-Do";
@@ -413,6 +508,12 @@ function createUI() {
 
   regenerateProjectsDiv();
   // Create Todo Items
+
+  window.addEventListener("beforeunload", function (event) {
+    event.preventDefault();
+    const projects = userControls.getProjects();
+    writeLocalStorage(projects);
+  });
 }
 
 createUI();
