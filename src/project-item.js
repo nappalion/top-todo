@@ -30,6 +30,8 @@ function createProject(title, todos = []) {
 
   const getTodoItems = () => todos;
 
+  const getTodoItem = (todoIndex) => todos[todoIndex];
+
   return {
     addTodoItem,
     removeTodoItem,
@@ -38,6 +40,7 @@ function createProject(title, todos = []) {
     setIndex,
     getIndex,
     getTodoItems,
+    getTodoItem,
   };
 }
 

@@ -1,10 +1,10 @@
 function createToDoItem(
   title,
-  description,
-  dueDate,
+  description = "",
+  dueDate = "",
   isComplete = false,
-  priority,
-  notes
+  priority = "",
+  notes = ""
 ) {
   let index = -1;
 
@@ -22,6 +22,10 @@ function createToDoItem(
 
   const toggleIsComplete = () => {
     isComplete = !isComplete;
+  };
+
+  const setIsComplete = (newIsComplete) => {
+    isComplete = newIsComplete;
   };
 
   const setPriority = (newPriority) => {
@@ -53,6 +57,7 @@ function createToDoItem(
     getDueDate,
     toggleIsComplete,
     getIsComplete,
+    setIsComplete,
     setPriority,
     getPriority,
     setNotes,

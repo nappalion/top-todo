@@ -17,7 +17,7 @@ function getUserControls() {
   };
 
   const removeProject = (index) => {
-    app.removeProject(removeProject(index));
+    app.removeProject(index);
   };
 
   // Todo Item Interaction
@@ -43,7 +43,7 @@ function getUserControls() {
   };
 
   const removeTodoItem = (projectIndex, todoIndex) => {
-    const project = app.getProjects(projectIndex);
+    const project = app.getProject(projectIndex);
     project.removeTodoItem(todoIndex);
   };
 
@@ -76,7 +76,7 @@ function createUI() {
   createProjectBtn.id = "create-project-btn";
   createProjectBtn.textContent = "Create Project";
 
-  const elements = [projectsH1, projectsDiv, createProjectBtn];
+  const elements = [projectsH1, createProjectBtn, projectsDiv];
   elements.forEach((element) => {
     document.body.appendChild(element);
   });
@@ -93,46 +93,10 @@ function createUI() {
     "do l"
   );
 
-  function regenerateProjectsDiv() {
-    projectsDiv.innerHTML = "";
-    const projects = userControls.getProjects();
-
-    projects.forEach((project) => {
-      const projectContent = document.createElement("div");
-
-      const projectTitleH1 = document.createElement("h1");
-      projectTitleH1.textContent = project.getTitle();
-
-      const todos = project.getTodoItems();
-      const todoElements = todos.map((todo) => {
-        const todoElement = document.createElement("div");
-
-        const todoTitleH2 = document.createElement("h2");
-        todoTitleH2.textContent = todo.getTitle();
-        todoElement.appendChild(todoTitleH2);
-
-        const todoDueDate = document.createElement("p");
-        todoDueDate.textContent = todo.getDueDate();
-        todoElement.appendChild(todoDueDate);
-
-        todoElement.addEventListener("click", () => {
-          todo.toggleIsComplete();
-          console.log(todo.getIsComplete());
-        });
-
-        return todoElement;
-      });
-
-      const elements = [projectTitleH1, ...todoElements];
-      elements.forEach((element) => {
-        projectContent.appendChild(element);
-      });
-
-      projectsDiv.appendChild(projectContent);
-    });
-  }
-
   function createProjectForm() {
+    let currProjectIndex = -1;
+    let newProject = true;
+
     // Create elements for form
     const modalDiv = document.createElement("div");
     modalDiv.style.display = "none";
@@ -158,6 +122,12 @@ function createUI() {
 
     modalDiv.appendChild(modalContent);
 
+    const setFields = (newProjectIndex, title) => {
+      currProjectIndex = newProjectIndex;
+      titleInput.value = title;
+      newProject = false;
+    };
+
     // Create functions for outside access
     const toggleModal = () => {
       modalDiv.style.display =
@@ -165,25 +135,283 @@ function createUI() {
     };
 
     submitBtn.addEventListener("click", () => {
-      if (titleInput.value !== "") {
+      if (titleInput.value !== "" && newProject) {
         userControls.addProject(titleInput.value, []);
-        titleInput.value = "";
-        modalDiv.style.display = "none";
+      } else if (titleInput.value !== "value" && !newProject) {
+        const project = userControls.getProject(currProjectIndex);
+        project.setTitle(titleInput.value);
       }
+      titleInput.value = "";
+      modalDiv.style.display = "none";
+      currProjectIndex = -1;
+      newProject = true;
       regenerateProjectsDiv();
     });
 
     document.body.appendChild(modalDiv);
 
-    return { toggleModal };
+    return { toggleModal, setFields };
+  }
+
+  function createTodoItemForm() {
+    let currProjectIndex = -1;
+    let currTodoIndex = -1;
+    let newTodo = true;
+
+    // Create elements for form
+    const modalDiv = document.createElement("div");
+    modalDiv.style.display = "none";
+    modalDiv.className = "modal";
+
+    const titleLabel = document.createElement("label");
+    titleLabel.textContent = "Title: ";
+    const titleInput = document.createElement("input");
+    titleInput.placeholder = "Enter title...";
+    titleInput.required = true;
+
+    const descriptionLabel = document.createElement("label");
+    descriptionLabel.textContent = "Description: ";
+    const descriptionInput = document.createElement("input");
+    descriptionInput.placeholder = "Enter description...";
+
+    const dueDateLabel = document.createElement("label");
+    dueDateLabel.textContent = "Title: ";
+    const dueDateInput = document.createElement("input");
+    dueDateInput.placeholder = "Enter due date...";
+
+    const isCompleteLabel = document.createElement("label");
+    isCompleteLabel.textContent = "Is Complete: ";
+    const isCompleteInput = document.createElement("input");
+    isCompleteInput.type = "checkbox";
+    isCompleteInput.checked = true;
+
+    const priorityLabel = document.createElement("label");
+    priorityLabel.textContent = "Priority: ";
+    const priorityInput = document.createElement("input");
+    priorityInput.placeholder = "Enter priority...";
+
+    const notesLabel = document.createElement("label");
+    notesLabel.textContent = "Notes: ";
+    const notesInput = document.createElement("input");
+    notesInput.placeholder = "Enter notes...";
+
+    const submitBtn = document.createElement("button");
+    submitBtn.textContent = "Submit";
+
+    const elements = [
+      titleLabel,
+      titleInput,
+      descriptionLabel,
+      descriptionInput,
+      dueDateLabel,
+      dueDateInput,
+      isCompleteLabel,
+      isCompleteInput,
+      priorityLabel,
+      priorityInput,
+      notesLabel,
+      notesInput,
+      submitBtn,
+    ];
+
+    const modalContent = document.createElement("div");
+    modalContent.className = "modal-content";
+
+    elements.forEach((element) => {
+      modalContent.appendChild(element);
+    });
+
+    modalDiv.appendChild(modalContent);
+
+    const setFields = (
+      newCurrTodoIndex,
+      title,
+      description,
+      dueDate,
+      isComplete,
+      priority,
+      notes
+    ) => {
+      newTodo = false;
+      currTodoIndex = newCurrTodoIndex;
+      titleInput.value = title;
+      descriptionInput.value = description;
+      dueDateInput.value = dueDate;
+      isCompleteInput.checked = isComplete;
+      priorityInput.value = priority;
+      notesInput.value = notes;
+    };
+
+    // Create functions for outside access
+    const toggleModal = () => {
+      modalDiv.style.display =
+        modalDiv.style.display == "none" ? "flex" : "none";
+    };
+
+    const setProjectIndex = (newIndex) => {
+      currProjectIndex = newIndex;
+    };
+
+    const inputs = [
+      titleInput,
+      descriptionInput,
+      dueDateInput,
+      priorityInput,
+      notesInput,
+    ];
+
+    submitBtn.addEventListener("click", () => {
+      if (titleInput.value !== "" && newTodo) {
+        userControls.addTodoItem(
+          currProjectIndex,
+          titleInput.value,
+          descriptionInput.value,
+          dueDateInput.value,
+          isCompleteInput.checked,
+          priorityInput.value,
+          notesInput.value
+        );
+      } else if (!newTodo) {
+        const todoItem = userControls.getTodoItem(
+          currProjectIndex,
+          currTodoIndex
+        );
+        todoItem.setTitle(titleInput.value);
+        todoItem.setDescription(descriptionInput.value);
+        todoItem.setDueDate(dueDateInput.value);
+        todoItem.setIsComplete(isCompleteInput.checked);
+        todoItem.setPriority(priorityInput.value);
+        todoItem.setNotes(notesInput.value);
+      }
+      newTodo = true;
+      inputs.forEach((input) => (input.value = ""));
+      modalDiv.style.display = "none";
+      currProjectIndex = -1;
+      currTodoIndex = -1;
+      regenerateProjectsDiv();
+    });
+
+    document.body.appendChild(modalDiv);
+
+    return { setProjectIndex, toggleModal, setFields };
   }
 
   const projectForm = createProjectForm();
+  const todoItemForm = createTodoItemForm();
 
   createProjectBtn.addEventListener("click", () => {
     projectForm.toggleModal();
   });
 
+  function regenerateProjectsDiv() {
+    projectsDiv.innerHTML = "";
+    const projects = userControls.getProjects();
+
+    projects.forEach((project) => {
+      const projectContent = document.createElement("div");
+      projectContent.className = "project-div";
+
+      const projectTitleH1 = document.createElement("h1");
+      projectTitleH1.textContent = project.getTitle();
+
+      const createTodoItemBtn = document.createElement("button");
+      createTodoItemBtn.addEventListener("click", () => {
+        todoItemForm.setProjectIndex(project.getIndex());
+        todoItemForm.toggleModal();
+      });
+      createTodoItemBtn.textContent = "Create To-Do";
+
+      const editProjectBtn = document.createElement("button");
+      editProjectBtn.addEventListener("click", () => {
+        projectForm.setFields(project.getIndex(), project.getTitle());
+        projectForm.toggleModal();
+      });
+      editProjectBtn.textContent = "Edit Project";
+
+      const deleteProjectBtn = document.createElement("button");
+      deleteProjectBtn.addEventListener("click", () => {
+        userControls.removeProject(project.getIndex());
+        regenerateProjectsDiv();
+      });
+      deleteProjectBtn.textContent = "Delete Project";
+
+      const todos = project.getTodoItems();
+      const todoElements = todos.map((todo) => {
+        const todoElement = document.createElement("div");
+        todoElement.className = "todo-div";
+
+        const todoTitleH2 = document.createElement("h2");
+        todoTitleH2.textContent = todo.getTitle();
+        todoElement.appendChild(todoTitleH2);
+
+        const todoDueDate = document.createElement("p");
+        todoDueDate.textContent = todo.getDueDate();
+        todoElement.appendChild(todoDueDate);
+
+        const todoIsComplete = document.createElement("input");
+        todoIsComplete.type = "checkbox";
+        todoIsComplete.checked = todo.getIsComplete();
+
+        const deleteTodoBtn = document.createElement("button");
+        deleteTodoBtn.addEventListener("click", () => {
+          userControls.removeTodoItem(project.getIndex(), todo.getIndex());
+          regenerateProjectsDiv();
+        });
+        deleteTodoBtn.textContent = "Delete Todo";
+
+        const editTodoBtn = document.createElement("button");
+        editTodoBtn.textContent = "Edit Todo";
+
+        const elements = [
+          todoTitleH2,
+          todoDueDate,
+          todoIsComplete,
+          editTodoBtn,
+          deleteTodoBtn,
+        ];
+        elements.forEach((element) => {
+          todoElement.appendChild(element);
+        });
+
+        todoIsComplete.addEventListener("click", () => {
+          todo.toggleIsComplete();
+          todoIsComplete.checked = todo.getIsComplete();
+          console.log(todo.getIsComplete());
+        });
+
+        editTodoBtn.addEventListener("click", () => {
+          todoItemForm.setProjectIndex(project.getIndex());
+          todoItemForm.setFields(
+            todo.getIndex(),
+            todo.getTitle(),
+            todo.getDescription(),
+            todo.getDueDate(),
+            todo.getIsComplete(),
+            todo.getPriority(),
+            todo.getNotes()
+          );
+          todoItemForm.toggleModal();
+        });
+
+        return todoElement;
+      });
+
+      const elements = [
+        projectTitleH1,
+        createTodoItemBtn,
+        editProjectBtn,
+        deleteProjectBtn,
+        ...todoElements,
+      ];
+      elements.forEach((element) => {
+        projectContent.appendChild(element);
+      });
+
+      projectsDiv.appendChild(projectContent);
+    });
+  }
+
+  regenerateProjectsDiv();
   // Create Todo Items
 }
 
